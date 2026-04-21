@@ -272,7 +272,7 @@ label.form-label{font-size:12.5px;color:#7A6A99;margin-bottom:8px;display:block;
     <div>
       <label class="form-label">ひとり目</label>
       <div style="display:flex;align-items:center;gap:12px">
-        <div id="setup-avatar0-wrap"><div class="avatar-placeholder" onclick="triggerUpload(0,'setup')"><svg viewBox="0 0 24 24" fill="none" stroke="var(--p0)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:30px;height:30px"><circle cx="12" cy="8.5" r="4"/><path d="M8.5 6.5c.5-2.8 2-4 3.5-4s3 1.2 3.5 4" stroke-width="1.5"/><path d="M4 21v-1a8 8 0 0 1 16 0v1"/></svg></div></div>
+        <div id="setup-avatar0-wrap" onclick="triggerUpload(0,'setup')" style="cursor:pointer"></div>
         <input type="file" id="file-setup-0" accept="image/*" style="display:none" onchange="handleAvatarUpload(0,'setup',this)">
         <input type="text" id="name1" placeholder="名前を入力してください" maxlength="10" style="flex:1">
       </div>
@@ -280,7 +280,7 @@ label.form-label{font-size:12.5px;color:#7A6A99;margin-bottom:8px;display:block;
     <div>
       <label class="form-label">ふたり目</label>
       <div style="display:flex;align-items:center;gap:12px">
-        <div id="setup-avatar1-wrap"><div class="avatar-placeholder" style="background:linear-gradient(135deg,var(--p1-soft,#FFE6F0),var(--p1-softer,#FFF8FB));border-color:var(--p1-border,#FBCFE8);box-shadow:0 2px 10px rgba(var(--p1-rgb),.18);" onclick="triggerUpload(1,'setup')"><svg viewBox="0 0 24 24" fill="none" stroke="var(--p1)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:30px;height:30px"><circle cx="12" cy="8.5" r="4"/><path d="M7.5 7c-.3 2.5-.1 5.5.5 7" stroke-width="1.5"/><path d="M16.5 7c.3 2.5 .1 5.5-.5 7" stroke-width="1.5"/><path d="M4 21v-1a8 8 0 0 1 16 0v1"/></svg></div></div>
+        <div id="setup-avatar1-wrap" onclick="triggerUpload(1,'setup')" style="cursor:pointer"></div>
         <input type="file" id="file-setup-1" accept="image/*" style="display:none" onchange="handleAvatarUpload(1,'setup',this)">
         <input type="text" id="name2" placeholder="名前を入力してください" maxlength="10" style="flex:1">
       </div>
@@ -690,7 +690,7 @@ document.addEventListener('keydown',function(e){
       <button class="btn-main" onclick="saveSettings()" style="flex:1">保存</button>
     </div>
     <button onclick="checkForUpdate()" style="width:100%;padding:13px;border-radius:14px;background:none;border:1.5px solid var(--border);color:var(--mix);font-size:15px;cursor:pointer;font-weight:500;margin-bottom:10px;transition:background .15s;" onmouseover="this.style.background='var(--grad-soft)'" onmouseout="this.style.background='none'">🔄 アプリを最新版に更新</button>
-    <button onclick="closeSettings();deleteActiveTab();" style="width:100%;padding:13px;border-radius:14px;background:none;border:1.5px solid #FFCC80;color:#F57C00;font-size:15px;cursor:pointer;font-weight:500;margin-bottom:10px;transition:background .15s;" onmouseover="this.style.background='#FFF3E0'" onmouseout="this.style.background='none'">🗑 現在のタブを削除</button>
+
     <button onclick="leaveRoom()" style="width:100%;padding:13px;border-radius:14px;background:none;border:1.5px solid #FFB0B0;color:#FF4D4D;font-size:15px;cursor:pointer;font-weight:500;transition:background .15s;" onmouseover="this.style.background='#FFF0F0'" onmouseout="this.style.background='none'">🚪 ルームを退出してタイトルに戻る</button>
   </div>
 </div>
@@ -980,7 +980,7 @@ function setActiveTab(tabId){
   renderMain();
 }
 function addNewTab(){
-  var title=prompt('新しいタブのタイトルを入力してください','生活費');
+  var title=prompt('新しいタブのタイトルを入力してください','');
   if(!title||!title.trim())return;
   title=title.trim();
   var newTab={id:genId(),title:title,createdAt:new Date().toISOString(),theme:currentTheme||'indigo_rose'};
@@ -1223,14 +1223,12 @@ function doUndo(){
   if(!undoStack.length)return;
   var action=undoStack.pop();
   if(action.type==='del'){
-    // 削除を取り消す → 取引を復元
     if(txRef)txRef.child(action.tx.id).set(action.tx);
-    redoStack.push({type:'add',tx:action.tx});
+    redoStack.push({type:'del',tx:action.tx});
     showToast('↩ 元に戻しました',1500);
   } else if(action.type==='add'){
-    // 追加を取り消す → 取引を削除
     if(txRef)txRef.child(action.tx.id).remove();
-    redoStack.push({type:'del',tx:action.tx});
+    redoStack.push({type:'add',tx:action.tx});
     showToast('↩ 追加を取り消しました',1500);
   }
   updateUndoRedoBtns();
@@ -1240,11 +1238,11 @@ function doRedo(){
   var action=redoStack.pop();
   if(action.type==='del'){
     if(txRef)txRef.child(action.tx.id).remove();
-    undoStack.push({type:'add',tx:action.tx});
+    undoStack.push({type:'del',tx:action.tx});
     showToast('↪ やり直しました',1500);
   } else if(action.type==='add'){
     if(txRef)txRef.child(action.tx.id).set(action.tx);
-    undoStack.push({type:'del',tx:action.tx});
+    undoStack.push({type:'add',tx:action.tx});
     showToast('↪ やり直しました',1500);
   }
   updateUndoRedoBtns();
@@ -2335,8 +2333,8 @@ function leaveRoom(){
   document.getElementById('setup-screen').classList.add('active');
   document.getElementById('name1').value='';
   document.getElementById('name2').value='';
-  document.getElementById('setup-avatar0-wrap').innerHTML='<div class="avatar-placeholder" onclick="triggerUpload(0,\'setup\')"><svg viewBox="0 0 24 24" fill="none" stroke="var(--p0)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:30px;height:30px"><circle cx="12" cy="8.5" r="4"/><path d="M8.5 6.5c.5-2.8 2-4 3.5-4s3 1.2 3.5 4" stroke-width="1.5"/><path d="M4 21v-1a8 8 0 0 1 16 0v1"/></svg></div>';
-  document.getElementById('setup-avatar1-wrap').innerHTML='<div class="avatar-placeholder" style="background:linear-gradient(135deg,var(--p1-soft,#FFE6F0),var(--p1-softer,#FFF8FB));border-color:var(--p1-border,#FBCFE8);" onclick="triggerUpload(1,\'setup\')"><svg viewBox="0 0 24 24" fill="none" stroke="var(--p1)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:30px;height:30px"><circle cx="12" cy="8.5" r="4"/><path d="M7.5 7c-.3 2.5-.1 5.5.5 7" stroke-width="1.5"/><path d="M16.5 7c.3 2.5 .1 5.5-.5 7" stroke-width="1.5"/><path d="M4 21v-1a8 8 0 0 1 16 0v1"/></svg></div>';
+  document.getElementById('setup-avatar0-wrap').innerHTML=makeAvatar(null,56,0);
+  document.getElementById('setup-avatar1-wrap').innerHTML=makeAvatar(null,56,1);
   document.getElementById('setup-note').textContent='';
   setSyncStatus('offline');
   showToast('タイトル画面に戻りました');
@@ -2623,6 +2621,38 @@ function checkForUpdate(){
     location.reload(true);
   },300);
 }
+
+// ===== セットアップ画面のアバター初期表示 =====
+document.addEventListener('DOMContentLoaded',function(){
+  var w0=document.getElementById('setup-avatar0-wrap');
+  var w1=document.getElementById('setup-avatar1-wrap');
+  if(w0)w0.innerHTML=makeAvatar(null,56,0);
+  if(w1)w1.innerHTML=makeAvatar(null,56,1);
+});
+
+// ===== サマリーカードスワイプでタブ切り替え（iOS対応） =====
+(function(){
+  var card=document.querySelector('.summary-card');
+  if(!card)return;
+  var sx=0,sy=0;
+  card.addEventListener('touchstart',function(e){
+    sx=e.touches[0].clientX;
+    sy=e.touches[0].clientY;
+  },{passive:true});
+  card.addEventListener('touchend',function(e){
+    var dx=e.changedTouches[0].clientX-sx;
+    var dy=e.changedTouches[0].clientY-sy;
+    if(Math.abs(dx)<45||Math.abs(dy)>Math.abs(dx)*0.8)return;
+    var tabs=data.tabs;
+    if(!tabs||tabs.length<=1)return;
+    var idx=tabs.findIndex(function(t){return t.id===data.activeTabId;});
+    if(dx<0){
+      setActiveTab(tabs[idx<tabs.length-1?idx+1:0].id);
+    }else{
+      setActiveTab(tabs[idx>0?idx-1:tabs.length-1].id);
+    }
+  },{passive:true});
+})();
 </script>
 
 <!-- 金額入力中にキーボード上に出る「次へ」ボタン -->
