@@ -341,8 +341,8 @@ label.form-label{font-size:12.5px;color:#7A6A99;margin-bottom:8px;display:block;
         <span class="period-badge" id="card-period">—</span>
         <!-- ドロップダウン -->
         <div id="tab-dropdown" style="display:none;position:absolute;top:42px;left:0;background:#fff;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,.18);min-width:220px;max-width:320px;z-index:40;overflow:hidden;color:var(--text);flex-direction:column;max-height:70dvh">
-          <div id="tab-dropdown-list" style="overflow-y:auto;flex:1"></div>
-          <div id="tab-action-bar"></div>
+          <div id="tab-dropdown-list" style="overflow-y:auto;flex:1;min-height:0"></div>
+          <div id="tab-action-bar" style="flex-shrink:0"></div>
         </div>
       </div>
       <div style="margin-bottom:14px;text-align:center">
@@ -374,7 +374,7 @@ label.form-label{font-size:12.5px;color:#7A6A99;margin-bottom:8px;display:block;
       <span style="font-size:14px;font-weight:600;color:#888">支払い履歴</span>
       <button onclick="refreshRates()" id="rate-status" style="font-size:11px;color:var(--mix);background:var(--grad-soft);border:none;border-radius:8px;padding:4px 10px;cursor:pointer;font-weight:500">🔄 レート更新</button>
     </div>
-    <div id="settled-banner" style="display:none;margin-bottom:12px;padding:10px 14px;background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:1.5px solid #86efac;border-radius:14px;display:none;align-items:center;gap:10px">
+    <div id="settled-banner" style="display:none;margin-bottom:12px;padding:10px 14px;background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:1.5px solid #86efac;border-radius:14px;align-items:center;gap:10px">
       <div style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;border:2px solid #22c55e;border-radius:50%;width:46px;height:46px;transform:rotate(-8deg);color:#22c55e;flex-shrink:0">
         <div style="font-size:9px;font-weight:900;letter-spacing:.02em">精算済</div>
         <div id="banner-stamp-date" style="font-size:8px;margin-top:1px;font-weight:600"></div>
@@ -1034,7 +1034,6 @@ function renderTabDropdown(){
       '</div>'+
       (isActive?'<span class="tab-item-check">✓</span>':'')+
       '<button class="tab-item-edit" onclick="event.stopPropagation();renameTab(\''+t.id+'\')" title="名前を変更">✎</button>'+
-      '<button class="tab-item-edit" onclick="event.stopPropagation();pickTabTheme(\''+t.id+'\')" title="カラー変更" style="font-size:12px">🎨</button>'+
     '</div>';
   }).join('');
   list.innerHTML=html;
@@ -1620,6 +1619,7 @@ function openAddModal(){
   amtEl.focus();
 }
 function openEditModal(id){
+  if(isTabSettled()){showToast('このタブは精算済みです。精算画面でチェックを外すと編集できます',2500);return;}
   var tx=data.transactions.find(function(t){return t.id===id;});
   if(!tx)return;
   editId=id;currentLocation=tx.location||null;currentLatLng=tx.latLng?{lat:tx.latLng.split(',')[0],lng:tx.latLng.split(',')[1]}:null;
@@ -2045,7 +2045,7 @@ function showCsvPreview(){
       var isEmpty=!c.trim();
       var fw=(isHeader||isSettleRow)?'700':'400';
       var color='#333';
-      html+='<td style="padding:6px 10px;border:.5px solid #E0E0E0;background:'+(isSettleRow?'#f9f9f9':'#fff')+';font-weight:'+fw+';color:'+color+';max-width:180px;overflow:hidden;text-overflow:ellipsis">'+
+      html+='<td style="padding:6px 10px;border:.5px solid #E0E0E0;background:'+(isSettleRow?'#f9f9f9':'#fff')+';font-weight:'+fw+';color:'+color+';white-space:nowrap">'+
         (isEmpty?'&nbsp;':c.replace(/</g,'&lt;'))+'</td>';
     });
     html+='</tr>';
@@ -2299,7 +2299,6 @@ function showTotal(){
   document.getElementById('total-modal').classList.add('active');
 }
 function closeTotal(){document.getElementById('total-modal').classList.remove('active');}
-function confirmSettleFromTotal(){doSettle();}
 
 function showSettings(){document.getElementById('set-name1').value=data.names[0];document.getElementById('set-name2').value=data.names[1];document.getElementById('room-id-display').textContent=roomId||'-';renderAvatarWrap('set-avatar0-wrap',0);renderAvatarWrap('set-avatar1-wrap',1);renderThemePicker();syncSoundToggleUI();document.getElementById('settings-modal').classList.add('active');}
 function renderThemePicker(){
