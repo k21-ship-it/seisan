@@ -644,9 +644,13 @@ document.addEventListener('keydown',function(e){
   <div class="modal">
     <h2 style="font-size:18px;font-weight:600;margin-bottom:1.25rem;text-align:center">設定</h2>
     <div class="room-id-box" style="background:var(--grad-soft);border:1px solid var(--p0-border)">
-      <div style="font-size:11px;background:var(--grad-amt);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:4px;font-weight:700">ルームID（パートナーに共有）</div>
-      <div style="font-size:12px;font-weight:500;color:#2D2D2D;word-break:break-all;line-height:1.5" id="room-id-display">-</div>
-      <button id="copy-btn" onclick="copyRoomId()" style="margin-top:8px;font-size:13px;background:var(--grad-btn);color:#fff;border:none;cursor:pointer;padding:6px 14px;font-weight:600;border-radius:8px;transition:all .15s;display:inline-flex;align-items:center;gap:5px">📋 コピー</button>
+      <div style="font-size:11px;background:var(--grad-amt);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:6px;font-weight:700">パートナーに共有</div>
+      <div style="font-size:11px;color:#888;margin-bottom:6px;line-height:1.6">ルームID・アプリURL・ホーム画面追加の説明をまとめてコピーします</div>
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+        <span style="font-size:10px;color:#aaa;font-weight:600;min-width:52px">ルームID</span>
+        <span style="font-size:12px;font-weight:700;color:#2D2D2D;word-break:break-all" id="room-id-display">-</span>
+      </div>
+      <button id="copy-btn" onclick="copyRoomId()" style="margin-top:8px;width:100%;font-size:13px;background:var(--grad-btn);color:#fff;border:none;cursor:pointer;padding:9px 14px;font-weight:600;border-radius:10px;transition:all .15s;display:inline-flex;align-items:center;justify-content:center;gap:6px">📋 まとめてコピー</button>
     </div>
     <div style="display:flex;flex-direction:column;gap:16px;margin-bottom:14px">
       <div>
@@ -2342,27 +2346,37 @@ function closeSettings(){document.getElementById('settings-modal').classList.rem
 function saveSettings(){var n1=(document.getElementById('set-name1').value||'').trim(),n2=(document.getElementById('set-name2').value||'').trim();if(!n1||!n2){alert('名前を入力してください');return;}data.names=[n1,n2];saveSettingsToFb();closeSettings();renderMain();showToast('設定を保存しました');}
 function copyRoomId(){
   if(!roomId)return;
-  // まずクリップボードにコピー
-  if(navigator.clipboard){navigator.clipboard.writeText(roomId).catch(function(){});}
+  var appUrl=window.location.href.split('?')[0].split('#')[0];
+  var text=
+    '【精算アプリ】招待\n'+
+    '\n'+
+    '📱 アプリURL\n'+
+    appUrl+'\n'+
+    '\n'+
+    '🔑 ルームID\n'+
+    roomId+'\n'+
+    '\n'+
+    '📌 iOSホーム画面への追加方法\n'+
+    '① SafariでアプリURLを開く\n'+
+    '② 画面下の共有ボタン（□↑）をタップ\n'+
+    '③「ホーム画面に追加」を選択して完了\n'+
+    '\n'+
+    '④ アプリを開いて設定→ルームID入力→参加';
+  if(navigator.clipboard){navigator.clipboard.writeText(text).catch(function(){});}
   var btn=document.getElementById('copy-btn');
-  // ① 押し込み（即時）
   btn.style.transform='scale(0.9)';
   btn.style.transition='all .1s ease';
   setTimeout(function(){
-    // ② バウンスで戻りながら緑に変化
     btn.style.transform='scale(1.05)';
     btn.style.background='#22C55E';
-    btn.style.color='#fff';
     btn.style.transition='all .15s ease';
-    btn.innerHTML='✓&nbsp;コピーしました！';
+    btn.innerHTML='✓ コピーしました！';
     setTimeout(function(){
       btn.style.transform='scale(1)';
       setTimeout(function(){
-        // ③ 2秒後に元に戻る
         btn.style.transition='all .3s ease';
-        btn.style.background='var(--p0-soft)';
-        btn.style.color='var(--p0)';
-        btn.innerHTML='📋 コピー';
+        btn.style.background='var(--grad-btn)';
+        btn.innerHTML='📋 まとめてコピー';
       },2000);
     },100);
   },100);
