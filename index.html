@@ -339,11 +339,6 @@ label.form-label{font-size:12.5px;color:#7A6A99;margin-bottom:8px;display:block;
           <svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </button>
         <span class="period-badge" id="card-period">—</span>
-        <!-- ドロップダウン -->
-        <div id="tab-dropdown" style="display:none;position:absolute;top:42px;left:0;background:#fff;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,.18);min-width:220px;max-width:320px;z-index:40;overflow:hidden;color:var(--text);flex-direction:column;max-height:70dvh">
-          <div id="tab-dropdown-list" style="overflow-y:auto;flex:1;min-height:0"></div>
-          <div id="tab-action-bar" style="flex-shrink:0"></div>
-        </div>
       </div>
       <div style="margin-bottom:14px;text-align:center">
         <div style="font-size:13px;opacity:.8;margin-bottom:4px">支払総額</div>
@@ -392,6 +387,11 @@ label.form-label{font-size:12.5px;color:#7A6A99;margin-bottom:8px;display:block;
     </div>
   </div>
   <!-- 一括削除バー（選択モード時に表示） -->
+  <!-- タブドロップダウン（fixed配置でsummary-cardのoverflow:hiddenを回避） -->
+  <div id="tab-dropdown" style="display:none;position:fixed;background:#fff;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,.18);min-width:220px;max-width:320px;z-index:200;color:var(--text);flex-direction:column;max-height:70dvh">
+    <div id="tab-dropdown-list" style="overflow-y:auto;flex:1;min-height:0"></div>
+    <div id="tab-action-bar" style="flex-shrink:0"></div>
+  </div>
   <div id="bulk-delete-bar" style="display:none;position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--p0-border);padding:12px 16px;padding-bottom:max(12px,env(safe-area-inset-bottom,0px));z-index:8;box-shadow:0 -4px 20px rgba(0,0,0,.1)">
     <div style="max-width:520px;margin:0 auto;display:flex;gap:10px;align-items:center">
       <button onclick="exitSelectMode()" style="flex:1;padding:12px;border-radius:12px;background:var(--p0-softer);border:none;color:var(--p0);font-size:14px;font-weight:500;cursor:pointer">キャンセル</button>
@@ -1049,6 +1049,17 @@ function toggleTabDropdown(e){
   if(!d)return;
   if(d.style.display==='flex'){d.style.display='none';return;}
   renderTabDropdown();
+  // ボタン位置に合わせて fixed 配置
+  var btn=document.getElementById('card-title-btn');
+  if(btn){
+    var r=btn.getBoundingClientRect();
+    var vw=window.innerWidth;
+    var left=r.left;
+    var maxW=320;
+    if(left+maxW>vw-8)left=Math.max(8,vw-maxW-8);
+    d.style.top=(r.bottom+6)+'px';
+    d.style.left=left+'px';
+  }
   d.style.display='flex';
 }
 function closeTabDropdown(){
@@ -1181,23 +1192,61 @@ function playCoinSound(){
 function makeAvatar(src,size,fb){
   size=size||44;
   if(src)return '<img src="'+src+'" style="width:'+size+'px;height:'+size+'px;border-radius:50%;object-fit:cover;display:block;">';
-  // デフォルト男女アイコン（fbが数値0or1で判定、文字列の場合は旧仕様）
   var isP0=fb===0||fb==='0';
   var isP1=fb===1||fb==='1';
-  var bgColor=isP0?'var(--p0-soft)':isP1?'#FFE6F0':'var(--p0-soft)';
-  var iconColor=isP0?'var(--p0)':isP1?'var(--p1)':'var(--p0-light)';
-  var iconSvg='';
+  function av(body){return '<svg width="'+size+'" height="'+size+'" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="display:block;flex-shrink:0">'+body+'</svg>';}
   if(isP0){
-    // 男性アイコン
-    iconSvg='<svg viewBox="0 0 24 24" fill="none" stroke="'+iconColor+'" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:'+(size*0.58)+'px;height:'+(size*0.58)+'px"><circle cx="12" cy="8.5" r="4"/><path d="M8.5 6.5c.5-2.8 2-4 3.5-4s3 1.2 3.5 4" stroke-width="1.5"/><path d="M4 21v-1a8 8 0 0 1 16 0v1"/></svg>';
-  } else if(isP1){
-    // 女性アイコン
-    iconSvg='<svg viewBox="0 0 24 24" fill="none" stroke="'+iconColor+'" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:'+(size*0.58)+'px;height:'+(size*0.58)+'px"><circle cx="12" cy="8.5" r="4"/><path d="M7.5 7c-.3 2.5-.1 5.5.5 7" stroke-width="1.5"/><path d="M16.5 7c.3 2.5 .1 5.5-.5 7" stroke-width="1.5"/><path d="M4 21v-1a8 8 0 0 1 16 0v1"/></svg>';
-  } else {
-    // フォールバック（文字）
-    return '<div style="width:'+size+'px;height:'+size+'px;border-radius:50%;background:var(--p0-soft);display:flex;align-items:center;justify-content:center;font-size:'+(size*0.38)+'px;color:var(--p0);font-weight:600;flex-shrink:0">'+(fb||'?')+'</div>';
+    // 男性イラスト（短髪・ひげ・青トップス）
+    return av(
+      '<circle cx="50" cy="50" r="49" fill="#EAF4FF"/>'+
+      '<ellipse cx="50" cy="40" rx="24" ry="21" fill="#231400"/>'+
+      '<rect x="26" y="43" width="6" height="15" rx="3" fill="#231400"/>'+
+      '<rect x="68" y="43" width="6" height="15" rx="3" fill="#231400"/>'+
+      '<ellipse cx="50" cy="58" rx="21" ry="24" fill="#E8B878"/>'+
+      '<path d="M28 41 Q50 26 72 41 Q66 51 50 48 Q34 51 28 41Z" fill="#231400"/>'+
+      '<rect x="44" y="79" width="12" height="9" rx="4" fill="#E8B878"/>'+
+      '<path d="M15 100 Q50 85 85 100Z" fill="#4A90D9"/>'+
+      '<ellipse cx="40" cy="57" rx="3.2" ry="3.2" fill="#1A0F00"/>'+
+      '<ellipse cx="60" cy="57" rx="3.2" ry="3.2" fill="#1A0F00"/>'+
+      '<circle cx="41.6" cy="55.8" r="1.1" fill="#fff"/>'+
+      '<circle cx="61.6" cy="55.8" r="1.1" fill="#fff"/>'+
+      '<path d="M36 50.5 Q40 48.5 44 50.5" stroke="#1A0F00" stroke-width="2" fill="none" stroke-linecap="round"/>'+
+      '<path d="M56 50.5 Q60 48.5 64 50.5" stroke="#1A0F00" stroke-width="2" fill="none" stroke-linecap="round"/>'+
+      '<path d="M48 64 Q50 67 52 64" stroke="#C48858" stroke-width="1.2" fill="none" stroke-linecap="round"/>'+
+      '<path d="M43 73 Q50 77 57 73" stroke="#B87050" stroke-width="1.6" fill="none" stroke-linecap="round"/>'+
+      '<circle cx="37" cy="77" r="1.2" fill="#8A5A38" opacity="0.5"/>'+
+      '<circle cx="41" cy="79" r="1.2" fill="#8A5A38" opacity="0.5"/>'+
+      '<circle cx="46" cy="80" r="1.2" fill="#8A5A38" opacity="0.5"/>'+
+      '<circle cx="50" cy="80.5" r="1.2" fill="#8A5A38" opacity="0.5"/>'+
+      '<circle cx="54" cy="80" r="1.2" fill="#8A5A38" opacity="0.5"/>'+
+      '<circle cx="59" cy="79" r="1.2" fill="#8A5A38" opacity="0.5"/>'+
+      '<circle cx="63" cy="77" r="1.2" fill="#8A5A38" opacity="0.5"/>'+
+      '<circle cx="50" cy="50" r="49" fill="none" stroke="#BFDBFE" stroke-width="3"/>'
+    );
   }
-  return '<div style="width:'+size+'px;height:'+size+'px;border-radius:50%;background:'+bgColor+';display:flex;align-items:center;justify-content:center;flex-shrink:0">'+iconSvg+'</div>';
+  if(isP1){
+    // 女性イラスト（ボブヘア・ピンクトップス）
+    return av(
+      '<circle cx="50" cy="50" r="49" fill="#FFF0F5"/>'+
+      '<ellipse cx="50" cy="46" rx="24" ry="22" fill="#7B5230"/>'+
+      '<rect x="26" y="47" width="7" height="22" rx="4" fill="#7B5230"/>'+
+      '<rect x="67" y="47" width="7" height="22" rx="4" fill="#7B5230"/>'+
+      '<ellipse cx="50" cy="59" rx="21" ry="23" fill="#F5C5A3"/>'+
+      '<path d="M28 45 Q50 31 72 45 Q65 54 50 51 Q35 54 28 45Z" fill="#7B5230"/>'+
+      '<rect x="44" y="79" width="12" height="9" rx="4" fill="#F5C5A3"/>'+
+      '<path d="M16 100 Q50 85 84 100Z" fill="#E0708A"/>'+
+      '<ellipse cx="40" cy="58" rx="3.2" ry="3.2" fill="#2D1B0E"/>'+
+      '<ellipse cx="60" cy="58" rx="3.2" ry="3.2" fill="#2D1B0E"/>'+
+      '<circle cx="41.6" cy="56.8" r="1.1" fill="#fff"/>'+
+      '<circle cx="61.6" cy="56.8" r="1.1" fill="#fff"/>'+
+      '<path d="M36 52 Q40 49.5 44 52" stroke="#5A3510" stroke-width="1.7" fill="none" stroke-linecap="round"/>'+
+      '<path d="M56 52 Q60 49.5 64 52" stroke="#5A3510" stroke-width="1.7" fill="none" stroke-linecap="round"/>'+
+      '<path d="M48 65 Q50 68 52 65" stroke="#D4956A" stroke-width="1.2" fill="none" stroke-linecap="round"/>'+
+      '<path d="M43 73.5 Q50 78 57 73.5" stroke="#C47B5C" stroke-width="1.6" fill="none" stroke-linecap="round"/>'+
+      '<circle cx="50" cy="50" r="49" fill="none" stroke="#FBCFE8" stroke-width="3"/>'
+    );
+  }
+  return '<div style="width:'+size+'px;height:'+size+'px;border-radius:50%;background:var(--p0-soft);display:flex;align-items:center;justify-content:center;font-size:'+(size*0.38)+'px;color:var(--p0);font-weight:600;flex-shrink:0">'+(fb||'?')+'</div>';
 }
 function showToast(msg,duration){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},duration||2500);}
 
@@ -1272,7 +1321,7 @@ function connectRoom(rid){
 function saveSettingsToFb(){if(!settingsRef)return;settingsRef.set({names:data.names,avatars:data.avatars,exchangeRates:data.exchangeRates,lastUpdated:new Date().toISOString()});}
 function triggerUpload(idx,ctx){document.getElementById('file-'+ctx+'-'+idx).click();}
 function handleAvatarUpload(idx,ctx,input){var file=input.files[0];if(!file)return;var r=new FileReader();r.onload=function(e){var b=e.target.result;if(ctx==='setup'){document.getElementById('setup-avatar'+idx+'-wrap').innerHTML=makeAvatar(b,56);data['_tmpAvatar'+idx]=b;}else{data.avatars[idx]=b;renderAvatarWrap('set-avatar'+idx+'-wrap',idx);saveSettingsToFb();renderMain();}};r.readAsDataURL(file);}
-function renderAvatarWrap(wid,idx){var el=document.getElementById(wid);if(!el)return;if(data.avatars[idx])el.innerHTML='<img src="'+data.avatars[idx]+'" style="width:56px;height:56px;border-radius:50%;object-fit:cover;border:2px solid var(--p0-border);cursor:pointer;display:block;">';else{var isP1=idx===1;var bgs=isP1?'background:linear-gradient(135deg,var(--p1-soft,#FFE6F0),var(--p1-softer,#FFF8FB));border-color:var(--p1-border,#FBCFE8);box-shadow:0 2px 10px rgba(var(--p1-rgb),.18);':'';var sc=isP1?'var(--p1)':'var(--p0)';var paths=isP1?'<path d="M7.5 7c-.3 2.5-.1 5.5.5 7" stroke="'+sc+'" stroke-width="1.5" stroke-linecap="round"/><path d="M16.5 7c.3 2.5 .1 5.5-.5 7" stroke="'+sc+'" stroke-width="1.5" stroke-linecap="round"/>':'<path d="M8.5 6.5c.5-2.8 2-4 3.5-4s3 1.2 3.5 4" stroke="'+sc+'" stroke-width="1.5" stroke-linecap="round"/>';el.innerHTML='<div class="avatar-placeholder" style="'+bgs+'"><svg viewBox="0 0 24 24" fill="none" stroke="'+sc+'" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:30px;height:30px"><circle cx="12" cy="8.5" r="4"/>'+paths+'<path d="M4 21v-1a8 8 0 0 1 16 0v1"/></svg></div>';}}
+function renderAvatarWrap(wid,idx){var el=document.getElementById(wid);if(!el)return;el.innerHTML=makeAvatar(data.avatars[idx],56,idx);}
 var LAST_CURRENCY_KEY='kt_last_currency';
 
 function refreshRates(){
