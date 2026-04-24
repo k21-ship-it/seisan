@@ -2343,9 +2343,10 @@ function closeSettings(){document.getElementById('settings-modal').classList.rem
 function saveSettings(){var n1=(document.getElementById('set-name1').value||'').trim(),n2=(document.getElementById('set-name2').value||'').trim();if(!n1||!n2){alert('名前を入力してください');return;}data.names=[n1,n2];saveSettingsToFb();closeSettings();renderMain();showToast('設定を保存しました');}
 function copyRoomId(){
   if(!roomId)return;
+  var appUrl=window.location.origin+window.location.pathname.replace(/\/[^/]*$/,'/');
   var text=
     '📱 アプリURL\n'+
-    'https://k21-ship-it.github.io/seisan/\n'+
+    appUrl+'\n'+
     '\n'+
     '🔑 ルームID\n'+
     roomId+'\n'+
